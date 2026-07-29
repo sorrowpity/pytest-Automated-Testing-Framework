@@ -1,3 +1,6 @@
+import allure
+
+@allure.step("1.解析请求数据")
 def analyse_case(case):
     # 1.数据解析，1.url不存在 ，2。部分字符串需要变成字典，3.预期结果这个参数不能在请求中传输，不然会报错
     method = case["method"]

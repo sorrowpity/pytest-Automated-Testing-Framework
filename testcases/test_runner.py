@@ -1,13 +1,14 @@
 import pytest
 import jsonpath
 import requests
-import pymysql
 from jinja2 import Template
 import allure
 
 from utils.excel_utils import read_excel
 from utils.allure_utils import allure_init
 from utils.analyse_case import analyse_case
+from utils.send_request import send_http_request
+from utils.send_request import send_jdbc_request
 
 class TestRunner:
     
@@ -26,17 +27,19 @@ class TestRunner:
         # 根据all的值来渲染case
         case = eval(Template(str(case)).render(all))
         
+        # 0.初始化allure
         allure_init(case)
         
-        # 1.分析case
+        
+        # 核心步骤1.分析case
         request_data = analyse_case(case)
         
-        # 2.发送请求
-        res = requests.request(**request_data)
-        #打印结果 调试需要
-        print(res.json())
-        # 3断言
-        # assert res.json()["meta"]["msg"] == case["expected"]
+        
+        # 核心步骤2.发送HTTP请求
+        res = send_http_request(request_data)
+        
+
+        # 3.处理断言
         
         # HTTP响应断言
         if case["check"]:
@@ -49,29 +52,8 @@ class TestRunner:
         # 如果表中sql_check 和 sql_expected 都存在，那么就执行数据库断言
         if case["sql_check"] and case["sql_expected"]:
             # 执行数据库断言
-            # 1.连接数据库
-            # 桥（连接数据库）
-            conn = pymysql.Connect(
-                host="127.0.0.1",
-                port=3306,
-                database="mydb",
-                user="root",
-                password="123456",
-                charset="utf8"
-            )
-            # 驴（创建游标）
-            cur = conn.cursor() # 创建游标
             
-            # 3.执行语句
-            cur.excute(case["sql_check"])
-            result = cur.fetchone() # 返回一个元组
-            
-            # 4.关闭数据库
-            cur.close()
-            conn.close()
-            
-
-            assert result[0] == case["sql_expected"]
+            assert send_jdbc_request(case["sql_check"]) == case["sql_expected"]
         
         
         # 步骤4 提取
@@ -94,18 +76,6 @@ class TestRunner:
                 # print(key, value)
                 # 1.执行语句
                 # 2.把提取的数据存入全局变量
-                conn = pymysql.Connect(
-                    host="127.0.0.1",
-                    port=3306,
-                    database="mydb",
-                    user="root",
-                    password="123456",
-                    charset="utf8"
-                )
-                cur = conn.cursor()
-                cur.execute(value)
-                result = cur.fetchone()
-                cur.close()
-                conn.close()
-                all[key] = result[0]
+                value = send_jdbc_request(value)
+                all[key] = value
                 # print(all)
