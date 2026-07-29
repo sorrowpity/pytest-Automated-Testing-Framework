@@ -7,6 +7,7 @@ import allure
 
 from utils.excel_utils import read_excel
 from utils.allure_utils import allure_init
+from utils.analyse_case import analyse_case
 
 class TestRunner:
     
@@ -26,31 +27,11 @@ class TestRunner:
         case = eval(Template(str(case)).render(all))
         
         allure_init(case)
-    
-        # 数据解析，1.url不存在 ，2。部分字符串需要变成字典，3.预期结果这个参数不能在请求中传输，不然会报错
-        method = case["method"]
-        url = "http://127.0.0.1:8888/api/private/v1/" + case["path"]
-        headers = eval(case["headers"]) if isinstance(case["headers"], str) else None
-        params = eval(case["params"]) if isinstance(case["params"], str) else None
-        data = eval(case["data"]) if isinstance(case["data"], str) else None
-        json = eval(case["json"]) if isinstance(case["json"], str) else None
-        files = eval(case["files"]) if isinstance(case["files"], str) else None
         
+        # 1.分析case
+        request_data = analyse_case(case)
         
-        request_data = {
-            "method": method,
-            "url": url,
-            "headers": headers,
-            "params": params,
-            "data": data,
-            "json": json,
-            "files": files
-        }
-        # print(request_data)
-        
-        
-        
-        #2发送请求
+        # 2.发送请求
         res = requests.request(**request_data)
         #打印结果 调试需要
         print(res.json())
