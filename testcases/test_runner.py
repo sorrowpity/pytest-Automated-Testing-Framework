@@ -1,10 +1,12 @@
-from utils.excel_utils import read_excel
 import pytest
 import jsonpath
 import requests
 import pymysql
 from jinja2 import Template
 import allure
+
+from utils.excel_utils import read_excel
+from utils.allure_utils import allure_init
 
 class TestRunner:
     
@@ -23,12 +25,8 @@ class TestRunner:
         # 根据all的值来渲染case
         case = eval(Template(str(case)).render(all))
         
-        # 初始化allure报告
-        allure.dynamic.feature(case["feature"])
-        allure.dynamic.story(case["story"])
-        # allure.dynamic.title(case["title"])
-        allure.dynamic.title(f"ID: {case["id"]}--{case['title']}")
-        
+        allure_init(case)
+    
         # 数据解析，1.url不存在 ，2。部分字符串需要变成字典，3.预期结果这个参数不能在请求中传输，不然会报错
         method = case["method"]
         url = "http://127.0.0.1:8888/api/private/v1/" + case["path"]

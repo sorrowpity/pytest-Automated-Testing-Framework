@@ -1,6 +1,24 @@
-__pycache__/
-*.py[cod]
-.pytest_cache/
-.coverage
-htmlcov/
+# VSCode 配置
+.vscode/
+*.code-workspace
+
+# 日志文件夹
+log/
+logs/
+
+# 测试报告目录
+report/
+allure-report/
+allure-results/
+
+# python虚拟环境
 .venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 系统文件
+.DS_Store
+Thumbs.db
