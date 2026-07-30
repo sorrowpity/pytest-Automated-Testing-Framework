@@ -1,6 +1,7 @@
 import requests
 import allure
 import pymysql
+from config.config import *
 
 @allure.step("2.发送HTTP请求")
 def send_http_request(request_data):
@@ -13,11 +14,11 @@ def send_jdbc_request(sql, index=0):
     # 1.连接数据库
     # 桥（连接数据库）
     conn = pymysql.Connect(
-        host="127.0.0.1",
-        port=3306,
-        database="mydb",
-        user="root",
-        password="123456",
+        host=DB_HOST,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
         charset="utf8"
     )
     # 驴（创建游标）

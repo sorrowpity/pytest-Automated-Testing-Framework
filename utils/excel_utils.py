@@ -1,14 +1,15 @@
 import openpyxl
 import os
-def read_excel(): # 参数传文件路径
+from config.config import SHEET_NAME, EXCEL_FILE
+def read_excel(file_path=EXCEL_FILE, sheet_name=SHEET_NAME): # 参数传文件路径
 
     cur_path = os.path.dirname(__file__) # 获取当前文件所在目录路径
-    excel_path = os.path.join(cur_path, "../data/data1.xlsx") # 拼接文件路径
+    excel_path = os.path.join(cur_path, file_path) # 拼接文件路径
     workbook = openpyxl.load_workbook(excel_path) # 参数传文件路径
 
 
     # 选择表
-    worksheet = workbook["Sheet1"]  # 参数传表名
+    worksheet = workbook[sheet_name]  # 参数传表名
 
     # 读取数据
     # zip函数可以将可迭代对象打包成一个元组列表
