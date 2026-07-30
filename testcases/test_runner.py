@@ -1,4 +1,5 @@
 import pytest
+import logging
 
 from jinja2 import Template
 
@@ -28,6 +29,10 @@ class TestRunner:
         
         # 0.初始化allure
         allure_init(case)
+        
+        
+        # 测试用例的描述信息日志,日志信息是个完整的字符串
+        logging.info(f"0.用例ID:{case['id']} 模块:{case['feature']} 场景:{case['story']} 标题:{case['title']}")
         
         
         # 核心步骤1.分析case

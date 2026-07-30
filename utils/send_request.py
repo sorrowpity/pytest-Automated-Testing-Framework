@@ -1,11 +1,13 @@
 import requests
 import allure
 import pymysql
+import logging
 from config.config import *
 
 @allure.step("2.发送HTTP请求")
 def send_http_request(request_data):
     res = requests.request(**request_data)
+    logging.info(f"2.发送HTTP请求, 响应文本为: {res.text}")
     return res
 
 # 工具函数：发送JDBC请求

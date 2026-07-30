@@ -1,4 +1,5 @@
 import allure
+import logging
 from config.config import BASE_URL
 
 @allure.step("1.解析请求数据")
@@ -23,5 +24,7 @@ def analyse_case(case):
         "files": files
     }
     
+    
+    logging.info(f"1.解析请求数据，请求数据为：{request_data}")
     # 加上返回值
     return request_data
