@@ -12,8 +12,8 @@ def read_excel(file_path=EXCEL_FILE, sheet_name=SHEET_NAME): # 参数传文件�
     worksheet = workbook[sheet_name]  # 参数传表名
 
     # 读取数据
-    # zip函数可以将可迭代对象打包成一个元组列表
-    # 因为dict(zip(key,values))，可以把读取到的数据变成字典类型，所以只需分别取出key行和value行即可
+    # zip函数可以将可迭代对象打包成一个元组列表，一一配对,[(),()]
+    # 因为dict(zip(key,values))，可以把读取到的数据变成字典类型，所以只需分别取出key行和value行即可,{"":"","":""}
 
     data = [] # 用于组装字典
     keys = [cell.value for cell in worksheet[2]] # 拿表中的第2行，拿key行

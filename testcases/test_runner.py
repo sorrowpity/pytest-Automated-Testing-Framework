@@ -18,6 +18,8 @@ class TestRunner:
     # 提取后的数据需要初始化一个全局的
     all = {}
 
+    # data 形似 [{},{}]
+    # case 形似 {}
     @pytest.mark.parametrize("case", data)
     def test_case(self, case):
         
@@ -25,6 +27,9 @@ class TestRunner:
         all = self.all
         
         # 根据all的值来渲染case
+        # case 先转str,然后根据all提取的参数信息来渲染，Template 是把字符串转为模板对象，再调用render对case中
+        # 可能包含的 {{}}类型进行 字典形式的key 取得value
+        # jinja2
         case = eval(Template(str(case)).render(all))
         
         # 0.初始化allure
