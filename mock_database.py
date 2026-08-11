@@ -55,6 +55,60 @@ def init_db():
             ("admin", "123456", 1),
         )
 
+    # ==================== 商品分类表 ====================
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sp_category (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            cat_name TEXT NOT NULL,
+            cat_pid INTEGER DEFAULT 0,
+            cat_level INTEGER DEFAULT 0,
+            cat_deleted INTEGER DEFAULT 0,
+            cat_icon TEXT DEFAULT '',
+            cat_src TEXT DEFAULT ''
+        )
+        """
+    )
+
+    # ==================== 商品属性表 ====================
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sp_attribute (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            attr_name TEXT NOT NULL,
+            cat_id INTEGER DEFAULT 0,
+            attr_sel TEXT DEFAULT '',
+            attr_write TEXT DEFAULT '',
+            attr_vals TEXT DEFAULT '',
+            delete_time INTEGER DEFAULT NULL
+        )
+        """
+    )
+
+    # ==================== 商品表 ====================
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS sp_goods (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            goods_name TEXT NOT NULL,
+            goods_price REAL DEFAULT 0.0,
+            goods_number INTEGER DEFAULT 0,
+            goods_weight INTEGER DEFAULT 0,
+            cat_id INTEGER DEFAULT 0,
+            goods_introduce TEXT DEFAULT '',
+            goods_big_logo TEXT DEFAULT '',
+            goods_small_logo TEXT DEFAULT '',
+            goods_state INTEGER DEFAULT 0,
+            add_time INTEGER DEFAULT 0,
+            is_del INTEGER DEFAULT 0,
+            hot_mumber INTEGER DEFAULT 0,
+            is_promote INTEGER DEFAULT 0,
+            upd_time INTEGER DEFAULT NULL,
+            delete_time INTEGER DEFAULT NULL
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
 
