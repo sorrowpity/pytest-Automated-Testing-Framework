@@ -25,8 +25,11 @@ pipeline {
 
         stage('启动 Mock 后端') {
             steps {
-                bat 'start /B .venv\\Scripts\\python.exe mock_backend.py'
-                bat 'timeout /t 3 /nobreak'
+                bat '''
+                    set BUILD_ID=dontKillMe
+                    start /B .venv\\Scripts\\python.exe mock_backend.py
+                    ping -n 4 127.0.0.1 > NUL
+                '''
             }
         }
 
