@@ -55,56 +55,14 @@ pipeline {
 
     post {
         always {
-            // 无论成功失败都执行：归档产物 + 清理后端进程
             archiveArtifacts artifacts: 'report/html_report/**, log/test.log', fingerprint: true
             bat 'taskkill /F /IM python.exe /FI "WINDOWTITLE eq *mock_backend*" 2>NUL || exit 0'
         }
         success {
-            // 使用 Python 直调钉钉 Webhook（绕过插件语法版本问题）
-            script {
-                def msg = """{
-                    "msgtype": "markdown",
-                    "markdown": {
-                        "title": "✅ 自动化测试通过",
-                        "text": "### ✅ 自动化测试通过\\n\\n- 构建：[${BUILD_DISPLAY_NAME}](${BUILD_URL})\\n- 提交：${GIT_COMMIT}\\n\\n[📊 查看 Allure 报告](${BUILD_URL}allure)"
-                    }
-                }"""
-                bat """
-                    .venv\\Scripts\\python.exe -c "
-import requests, time, hmac, hashlib, base64
-secret = '${DINGTALK_SECRET}'
-timestamp = str(round(time.time() * 1000))
-sign_str = timestamp + '\\n' + secret
-sign = base64.b64encode(hmac.new(secret.encode(), sign_str.encode(), hashlib.sha256).digest()).decode()
-url = '${DINGTALK_WEBHOOK}&timestamp=' + timestamp + '&sign=' + sign
-requests.post(url, json=${msg})
-print('钉钉通知已发送')
-"
-                """
-            }
+            bat '.venv\\Scripts\\python.exe utils\\dingtalk_notify.py success %BUILD_URL% %BUILD_DISPLAY_NAME% %GIT_COMMIT%'
         }
         failure {
-            script {
-                def msg = """{
-                    "msgtype": "markdown",
-                    "markdown": {
-                        "title": "❌ 自动化测试失败",
-                        "text": "### ❌ 自动化测试失败\\n\\n- 构建：[${BUILD_DISPLAY_NAME}](${BUILD_URL})\\n- 提交：${GIT_COMMIT}\\n\\n[📋 查看日志](${BUILD_URL}console)\\n[📊 Allure 报告](${BUILD_URL}allure)"
-                    }
-                }"""
-                bat """
-                    .venv\\Scripts\\python.exe -c "
-import requests, time, hmac, hashlib, base64
-secret = '${DINGTALK_SECRET}'
-timestamp = str(round(time.time() * 1000))
-sign_str = timestamp + '\\n' + secret
-sign = base64.b64encode(hmac.new(secret.encode(), sign_str.encode(), hashlib.sha256).digest()).decode()
-url = '${DINGTALK_WEBHOOK}&timestamp=' + timestamp + '&sign=' + sign
-requests.post(url, json=${msg})
-print('钉钉通知已发送')
-"
-                """
-            }
+            bat '.venv\\Scripts\\python.exe utils\\dingtalk_notify.py failure %BUILD_URL% %BUILD_DISPLAY_NAME% %GIT_COMMIT%'
         }
     }
 }
