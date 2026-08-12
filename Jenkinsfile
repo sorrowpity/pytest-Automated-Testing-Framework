@@ -58,12 +58,42 @@ pipeline {
             bat 'taskkill /F /IM python.exe /FI "WINDOWTITLE eq *mock_backend*" 2>NUL || exit 0'
         }
         success {
-            // 后续在这里接入钉钉通知
-            echo '测试全部通过，后续在此接入钉钉通知'
+            dingtalk (
+                robot: 'test-notify',
+                type: 'MARKDOWN',
+                title: '✅ 自动化测试通过',
+                text: [
+                    "### ✅ 自动化测试通过",
+                    "",
+                    "| 项目 | 详情 |",
+                    "|------|------|",
+                    "| 构建编号 | [${BUILD_DISPLAY_NAME}](${BUILD_URL}) |",
+                    "| Git 提交 | ${GIT_COMMIT} |",
+                    "| 分支 | ${GIT_BRANCH} |",
+                    "",
+                    "[📊 查看 Allure 报告](${BUILD_URL}allure)"
+                ]
+            )
         }
         failure {
-            // 失败时的钉钉通知
-            echo '测试有失败，后续在此接入钉钉告警'
+            dingtalk (
+                robot: 'test-notify',
+                type: 'MARKDOWN',
+                title: '❌ 自动化测试失败 — 请关注',
+                text: [
+                    "### ❌ 自动化测试失败",
+                    "",
+                    "| 项目 | 详情 |",
+                    "|------|------|",
+                    "| 构建编号 | [${BUILD_DISPLAY_NAME}](${BUILD_URL}) |",
+                    "| Git 提交 | ${GIT_COMMIT} |",
+                    "| 分支 | ${GIT_BRANCH} |",
+                    "",
+                    "[📋 查看构建日志](${BUILD_URL}console)",
+                    "",
+                    "[📊 查看 Allure 报告](${BUILD_URL}allure)"
+                ]
+            )
         }
     }
 }
