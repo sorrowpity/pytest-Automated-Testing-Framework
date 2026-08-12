@@ -57,6 +57,7 @@ pipeline {
             steps {
                 bat '''
                     cd report\\html_report
+                    echo . > .nojekyll
                     git init
                     git checkout -b gh-pages
                     git add .
