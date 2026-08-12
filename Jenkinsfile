@@ -49,8 +49,7 @@ pipeline {
 
         stage('生成报告') {
             steps {
-                // --single-file: 单文件报告，手机 GitHub Pages 完美渲染
-                bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --single-file --clean'
+                bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --clean'
                 allure includeProperties: false, results: [[path: 'report/json_report']]
             }
         }
@@ -58,11 +57,13 @@ pipeline {
         stage('发布报告到 GitHub Pages') {
             steps {
                 bat '''
-                    git clone -b gh-pages https://%GITHUB_TOKEN%@github.com/sorrowpity/pytest-Automated-Testing-Framework.git gh-pages-tmp
+                    git clone --depth 1 -b gh-pages https://%GITHUB_TOKEN%@github.com/sorrowpity/pytest-Automated-Testing-Framework.git gh-pages-tmp
                     cd gh-pages-tmp
                     git rm -rf .
                     xcopy /E /Y ..\\report\\html_report\\* .
                     echo . > .nojekyll
+                    dir index.html
+                    dir data\\suites.json
                     git config user.name "Jenkins CI"
                     git config user.email "jenkins@bot.local"
                     git add --all
