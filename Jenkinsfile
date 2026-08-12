@@ -2,8 +2,10 @@ pipeline {
     agent any
 
     environment {
-        MYSQL_PASSWORD = credentials('mysql-password')   // Jenkins 凭证 ID
-        DB_BACKEND     = 'mysql'
+        MYSQL_PASSWORD    = credentials('mysql-password')
+        DB_BACKEND        = 'mysql'
+        DINGTALK_WEBHOOK  = credentials('dingtalk-webhook')
+        DINGTALK_SECRET   = credentials('dingtalk-secret')
     }
 
     stages {
@@ -58,42 +60,51 @@ pipeline {
             bat 'taskkill /F /IM python.exe /FI "WINDOWTITLE eq *mock_backend*" 2>NUL || exit 0'
         }
         success {
-            dingtalk (
-                robot: 'test-notify',
-                type: 'MARKDOWN',
-                title: '✅ 自动化测试通过',
-                text: [
-                    "### ✅ 自动化测试通过",
-                    "",
-                    "| 项目 | 详情 |",
-                    "|------|------|",
-                    "| 构建编号 | [${BUILD_DISPLAY_NAME}](${BUILD_URL}) |",
-                    "| Git 提交 | ${GIT_COMMIT} |",
-                    "| 分支 | ${GIT_BRANCH} |",
-                    "",
-                    "[📊 查看 Allure 报告](${BUILD_URL}allure)"
-                ]
-            )
+            // 使用 Python 直调钉钉 Webhook（绕过插件语法版本问题）
+            script {
+                def msg = """{
+                    "msgtype": "markdown",
+                    "markdown": {
+                        "title": "✅ 自动化测试通过",
+                        "text": "### ✅ 自动化测试通过\\n\\n- 构建：[${BUILD_DISPLAY_NAME}](${BUILD_URL})\\n- 提交：${GIT_COMMIT}\\n\\n[📊 查看 Allure 报告](${BUILD_URL}allure)"
+                    }
+                }"""
+                bat """
+                    .venv\\Scripts\\python.exe -c "
+import requests, time, hmac, hashlib, base64
+secret = '${DINGTALK_SECRET}'
+timestamp = str(round(time.time() * 1000))
+sign_str = timestamp + '\\n' + secret
+sign = base64.b64encode(hmac.new(secret.encode(), sign_str.encode(), hashlib.sha256).digest()).decode()
+url = '${DINGTALK_WEBHOOK}&timestamp=' + timestamp + '&sign=' + sign
+requests.post(url, json=${msg})
+print('钉钉通知已发送')
+"
+                """
+            }
         }
         failure {
-            dingtalk (
-                robot: 'test-notify',
-                type: 'MARKDOWN',
-                title: '❌ 自动化测试失败 — 请关注',
-                text: [
-                    "### ❌ 自动化测试失败",
-                    "",
-                    "| 项目 | 详情 |",
-                    "|------|------|",
-                    "| 构建编号 | [${BUILD_DISPLAY_NAME}](${BUILD_URL}) |",
-                    "| Git 提交 | ${GIT_COMMIT} |",
-                    "| 分支 | ${GIT_BRANCH} |",
-                    "",
-                    "[📋 查看构建日志](${BUILD_URL}console)",
-                    "",
-                    "[📊 查看 Allure 报告](${BUILD_URL}allure)"
-                ]
-            )
+            script {
+                def msg = """{
+                    "msgtype": "markdown",
+                    "markdown": {
+                        "title": "❌ 自动化测试失败",
+                        "text": "### ❌ 自动化测试失败\\n\\n- 构建：[${BUILD_DISPLAY_NAME}](${BUILD_URL})\\n- 提交：${GIT_COMMIT}\\n\\n[📋 查看日志](${BUILD_URL}console)\\n[📊 Allure 报告](${BUILD_URL}allure)"
+                    }
+                }"""
+                bat """
+                    .venv\\Scripts\\python.exe -c "
+import requests, time, hmac, hashlib, base64
+secret = '${DINGTALK_SECRET}'
+timestamp = str(round(time.time() * 1000))
+sign_str = timestamp + '\\n' + secret
+sign = base64.b64encode(hmac.new(secret.encode(), sign_str.encode(), hashlib.sha256).digest()).decode()
+url = '${DINGTALK_WEBHOOK}&timestamp=' + timestamp + '&sign=' + sign
+requests.post(url, json=${msg})
+print('钉钉通知已发送')
+"
+                """
+            }
         }
     }
 }
