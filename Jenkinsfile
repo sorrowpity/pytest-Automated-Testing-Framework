@@ -49,7 +49,8 @@ pipeline {
 
         stage('生成报告') {
             steps {
-                bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --clean'
+                // 直接用系统 Allure 命令行（跟插件是同一个，不经过 Python 包装器）
+                bat 'D:\\allure\\allure-2.44.0\\bin\\allure.bat generate ./report/json_report -o ./report/html_report --clean'
                 allure includeProperties: false, results: [[path: 'report/json_report']]
             }
         }
