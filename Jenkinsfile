@@ -6,6 +6,7 @@ pipeline {
         DB_BACKEND        = 'mysql'
         DINGTALK_WEBHOOK  = credentials('dingtalk-webhook')
         DINGTALK_SECRET   = credentials('dingtalk-secret')
+        GITHUB_PAGES_URL  = 'https://sorrowpity.github.io/pytest-Automated-Testing-Framework/'
     }
 
     stages {
@@ -49,6 +50,20 @@ pipeline {
             steps {
                 bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --clean'
                 allure includeProperties: false, results: [[path: 'report/json_report']]
+            }
+        }
+
+        stage('发布报告到 GitHub Pages') {
+            steps {
+                bat '''
+                    cd report\\html_report
+                    git init
+                    git checkout -b gh-pages
+                    git add .
+                    git commit -m "Allure report [%BUILD_DISPLAY_NAME%]"
+                    git remote add origin git@github.com:sorrowpity/pytest-Automated-Testing-Framework.git
+                    git push -f origin gh-pages
+                '''
             }
         }
     }

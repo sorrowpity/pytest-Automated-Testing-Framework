@@ -21,13 +21,17 @@ def send_dingtalk(status, build_url, build_name, git_commit):
 
     url = f"{webhook}&timestamp={timestamp}&sign={sign}"
 
+    # GitHub Pages 公网地址，手机也能看
+    pages_url = os.environ.get("GITHUB_PAGES_URL", "")
+
     if status == "success":
         title = "✅ 自动化测试通过"
         text = (
             f"### ✅ 自动化测试通过\n\n"
             f"- 构建：[{build_name}]({build_url})\n"
             f"- 提交：{git_commit}\n\n"
-            f"[📊 查看 Allure 报告]({build_url}allure)"
+            f"[📊 PC 查看报告]({build_url}allure)\n\n"
+            f"[📱 手机查看报告]({pages_url})"
         )
     else:
         title = "❌ 自动化测试失败"
@@ -35,8 +39,9 @@ def send_dingtalk(status, build_url, build_name, git_commit):
             f"### ❌ 自动化测试失败\n\n"
             f"- 构建：[{build_name}]({build_url})\n"
             f"- 提交：{git_commit}\n\n"
-            f"[📋 查看日志]({build_url}console)\n"
-            f"[📊 Allure 报告]({build_url}allure)"
+            f"[📋 查看日志]({build_url}console)\n\n"
+            f"[📊 PC 查看报告]({build_url}allure)\n\n"
+            f"[📱 手机查看报告]({pages_url})"
         )
 
     payload = {
