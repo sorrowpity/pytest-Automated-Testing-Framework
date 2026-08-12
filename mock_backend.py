@@ -69,6 +69,8 @@ def create_user():
         }), 401
 
     payload = request.get_json(silent=True) or {}
+    if not payload:
+        payload = request.form.to_dict() or {}
     username = payload.get("username")
     password = payload.get("password")
 
