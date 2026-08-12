@@ -1,0 +1,6 @@
+INFO     root:test_runner.py:40 0.用例ID:4 模块:用户管理 场景:新增成功 标题:添加一个用户，添加成功
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//users', 'headers': {'Authorization': 'mock-token-123'}, 'params': None, 'data': None, 'json': {'username': 'jay', 'password': '123456'}, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"id":21,"password":"123456","username":"jay"},"meg":"\u521b\u5efa\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(创建成功) == 预期结果(创建成功)
+INFO     root:extractor.py:20 4.JSON提取, 根据({"JAY_ID":"$..id"})提取数据, 此时全局变量为: ({'TOKEN': 'mock-token-123', 'ADMIN_NAME': 'admin', 'JAY_ID': 21})

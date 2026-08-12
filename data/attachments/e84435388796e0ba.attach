@@ -1,0 +1,1 @@
+1.解析请求数据，请求数据为：{'method': 'get', 'url': 'http://127.0.0.1:8888/api/private/v1//users', 'headers': {'Authorization': 'mock-token-123'}, 'params': {'pagenum': 1, 'pagesize': 1}, 'data': None, 'json': None, 'files': None}
