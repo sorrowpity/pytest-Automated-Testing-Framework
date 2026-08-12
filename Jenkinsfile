@@ -6,6 +6,7 @@ pipeline {
         DB_BACKEND        = 'mysql'
         DINGTALK_WEBHOOK  = credentials('dingtalk-webhook')
         DINGTALK_SECRET   = credentials('dingtalk-secret')
+        GITHUB_TOKEN      = credentials('github-token')
         GITHUB_PAGES_URL  = 'https://sorrowpity.github.io/pytest-Automated-Testing-Framework/'
     }
 
@@ -48,7 +49,8 @@ pipeline {
 
         stage('生成报告') {
             steps {
-                bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --clean'
+                // --single-file: 单文件报告，手机 GitHub Pages 完美渲染
+                bat '.venv\\Scripts\\python.exe -m allure generate ./report/json_report -o ./report/html_report --single-file --clean'
                 allure includeProperties: false, results: [[path: 'report/json_report']]
             }
         }
@@ -56,14 +58,18 @@ pipeline {
         stage('发布报告到 GitHub Pages') {
             steps {
                 bat '''
-                    cd report\\html_report
+                    git clone -b gh-pages https://%GITHUB_TOKEN%@github.com/sorrowpity/pytest-Automated-Testing-Framework.git gh-pages-tmp
+                    cd gh-pages-tmp
+                    git rm -rf .
+                    xcopy /E /Y ..\\report\\html_report\\* .
                     echo . > .nojekyll
-                    git init
-                    git checkout -b gh-pages
-                    git add .
+                    git config user.name "Jenkins CI"
+                    git config user.email "jenkins@bot.local"
+                    git add --all
                     git commit -m "Allure report [%BUILD_DISPLAY_NAME%]"
-                    git remote add origin git@github.com:sorrowpity/pytest-Automated-Testing-Framework.git
-                    git push -f origin gh-pages
+                    git push origin gh-pages
+                    cd ..
+                    rmdir /S /Q gh-pages-tmp
                 '''
             }
         }
