@@ -1,0 +1,5 @@
+INFO     root:test_runner.py:40 0.用例ID:3 模块:用户管理 场景:查询成功 标题:查询用户数据列表成功
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'get', 'url': 'http://127.0.0.1:8888/api/private/v1//users', 'headers': {'Authorization': 'mock-token-123'}, 'params': {'pagenum': 1, 'pagesize': 1}, 'data': None, 'json': None, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"users":[{"id":1,"password":"123456","state":true,"username":"admin"}]},"meg":"\u83b7\u53d6\u7ba1\u7406\u5458\u5217\u8868\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(获取管理员列表成功) == 预期结果(获取管理员列表成功)
