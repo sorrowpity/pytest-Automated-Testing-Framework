@@ -20,7 +20,15 @@ DB_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
 # sqlite mock 数据库路径（使用与 mock_database.py 一致的文件）
 DB_SQLITE_PATH = "data/mock_test.db"
 
-# mysql 资源（如果切到真实 mysql，这些行会在 teardown 时执行）
-SQL1 = "delete from sp_category where cat_name = '大码服装'"
-SQL2 = "delete from sp_attribute where attr_name = 'VIP尺码'"
-SQL3 = "delete from sp_goods where goods_name = '大码牛仔裤'"
+# 测试数据清理（teardown 时按顺序执行，保证可重复运行）
+# 只清理测试产生的数据 + 重置被测试改动的行，不删种子数据
+CLEANUP_SQLS = [
+    "DELETE FROM sp_order_item",
+    "DELETE FROM sp_order",
+    "DELETE FROM sp_cart",
+    "DELETE FROM sp_goods WHERE goods_name LIKE '测试%'",
+    "UPDATE sp_goods SET is_del = 0, goods_price = 10.2, goods_number = 100 WHERE id = 2",
+    "UPDATE sp_goods SET is_del = 0, goods_price = 10.3, goods_number = 100 WHERE id = 3",
+    "UPDATE sp_goods SET is_del = 0 WHERE id = 1000",
+    "DELETE FROM sp_user WHERE username LIKE 'test%'",
+]

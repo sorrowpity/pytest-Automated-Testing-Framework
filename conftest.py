@@ -12,7 +12,7 @@ def destroy_data():
     yield
 
     # 对当前示例环境做“无破坏性”的清理：优先支持 sqlite，MySQL 仅在明确配置时执行
-    sqls = {SQL1, SQL2, SQL3}
+    sqls = CLEANUP_SQLS
 
     try:
         if DB_BACKEND.lower() == "mysql":

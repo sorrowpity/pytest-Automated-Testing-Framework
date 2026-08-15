@@ -27,6 +27,13 @@ pipeline {
             }
         }
 
+        stage('初始化数据') {
+            steps {
+                // 幂等造数（1000 商品 + 100 买家），DB_BACKEND 已设为 mysql
+                bat '.venv\\Scripts\\python.exe mock_seed.py'
+            }
+        }
+
         stage('启动 Mock 后端') {
             steps {
                 bat '''
