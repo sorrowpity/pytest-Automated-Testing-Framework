@@ -1,6 +1,0 @@
-INFO     root:test_runner.py:40 0.用例ID:19 模块:购物车 场景:数据一致性 标题:重复加购数量累加
-INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//cart', 'headers': {'Authorization': 'token-3'}, 'params': None, 'data': None, 'json': {'goods_id': 2, 'goods_num': 2}, 'files': None}
-INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"cart_id":4},"meg":"\u52a0\u5165\u8d2d\u7269\u8f66\u6210\u529f"}
-
-INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(加入购物车成功) == 预期结果(加入购物车成功)
-INFO     root:asserts.py:26 3.JDBC响应断言内容: 实际结果(5) == 预期结果(5)

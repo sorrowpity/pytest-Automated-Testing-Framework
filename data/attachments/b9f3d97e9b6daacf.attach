@@ -1,1 +1,0 @@
-1.解析请求数据，请求数据为：{'method': 'put', 'url': 'http://127.0.0.1:8888/api/private/v1//cart/4', 'headers': {'Authorization': 'token-3'}, 'params': None, 'data': None, 'json': {'goods_num': 4}, 'files': None}
