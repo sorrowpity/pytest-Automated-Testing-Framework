@@ -77,9 +77,13 @@ pipeline {
                     git config user.email "jenkins@bot.local"
                     git add --all
                     git commit -m "Allure report [%BUILD_DISPLAY_NAME%]"
-                    git push origin gh-pages
+                    rem gh-pages 是纯生成物分支（每次整目录覆盖），用 --force 避免 non-fast-forward
+                    git push --force origin gh-pages
+                    set PUSH_RESULT=%errorlevel%
                     cd ..
                     rmdir /S /Q gh-pages-tmp
+                    rem 把 push 的真实退出码返回给 Jenkins：否则 rmdir 成功后会把 push 失败掩盖成绿色
+                    exit /b %PUSH_RESULT%
                 '''
             }
         }
