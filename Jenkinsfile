@@ -8,6 +8,7 @@ pipeline {
         DINGTALK_SECRET   = credentials('dingtalk-secret')
         GITHUB_TOKEN      = credentials('github-token')
         GITHUB_PAGES_URL  = 'https://sorrowpity.github.io/pytest-Automated-Testing-Framework/'
+        PYTHONIOENCODING  = 'utf-8'
     }
 
     stages {

@@ -101,9 +101,21 @@ CREATE TABLE IF NOT EXISTS sp_order_item (
     KEY idx_item_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 10. 初始数据
-INSERT INTO sp_manager (mg_name, mg_pwd, mg_state) VALUES ('admin', '123456', 1)
-    ON DUPLICATE KEY UPDATE mg_name=mg_name;
+-- 10. 初始数据（幂等：先去重，再确保存在一条 admin）
 
-INSERT INTO sp_user (username, password, state) VALUES ('admin', '123456', 1)
-    ON DUPLICATE KEY UPDATE username=username;
+-- 10.1 去重：sp_manager 每个 mg_name 只保留 id 最小的一条
+DELETE t1 FROM sp_manager t1
+JOIN sp_manager t2 ON t1.mg_name = t2.mg_name AND t1.id > t2.id;
+
+-- 10.2 去重：sp_user 每个 username 只保留 id 最小的一条
+DELETE t1 FROM sp_user t1
+JOIN sp_user t2 ON t1.username = t2.username AND t1.id > t2.id;
+
+-- 10.3 确保存在 admin（不存在才插入，可反复执行）
+INSERT INTO sp_manager (mg_name, mg_pwd, mg_state)
+SELECT 'admin', '123456', 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM sp_manager WHERE mg_name = 'admin');
+
+INSERT INTO sp_user (username, password, state)
+SELECT 'admin', '123456', 1 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM sp_user WHERE username = 'admin');
