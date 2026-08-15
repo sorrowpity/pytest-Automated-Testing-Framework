@@ -23,6 +23,7 @@ from mock_database import (
     query_one,
     query_all,
     init_db,
+    transaction,
     _is_mysql,
 )
 
@@ -79,7 +80,78 @@ def _buyer_id(auth):
     return info[1] if info and info[0] == "buyer" else None
 
 
+def _parse_int(value, default, min_val=None, max_val=None):
+    """安全解析整数参数：非法值/越界抛 ValueError，由全局异常处理器转成 400。"""
+    if value is None:
+        return default
+    try:
+        result = int(value)
+    except (TypeError, ValueError):
+        raise ValueError("参数必须是整数")
+    if min_val is not None and result < min_val:
+        raise ValueError("参数超出范围")
+    if max_val is not None and result > max_val:
+        raise ValueError("参数超出范围")
+    return result
+
+
+def _json_err(meg, code):
+    """返回带状态码的 JSON Response（错误处理器不能返回元组）。"""
+    resp = jsonify({"meg": meg, "data": {}})
+    resp.status_code = code
+    return resp
+
+
+# ==================== 全局异常处理 ====================
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """兜底：所有未捕获异常统一返回 JSON，避免 500 HTML。"""
+    if isinstance(e, ValueError):
+        return _json_err("参数错误", 400)
+    app.logger.error("未处理异常: %s", e, exc_info=True)
+    return _json_err("服务器内部错误", 500)
+
+
+@app.errorhandler(404)
+def handle_not_found(e):
+    return _json_err("接口不存在", 404)
+
+
+@app.errorhandler(405)
+def handle_method_not_allowed(e):
+    return _json_err("请求方法不允许", 405)
+
+
 # ==================== 认证 ====================
+
+# 登录限流（防暴力破解）：内存态，重启后端即重置
+LOGIN_MAX_FAILS = 5
+LOGIN_LOCK_SECONDS = 300  # 5 分钟
+_login_failures = {}  # username -> {"count": int, "locked_until": float}
+
+
+def _is_login_locked(username):
+    rec = _login_failures.get(username)
+    if not rec:
+        return False
+    if rec["count"] >= LOGIN_MAX_FAILS and rec["locked_until"] > time.time():
+        return True
+    if rec["count"] >= LOGIN_MAX_FAILS:
+        _login_failures.pop(username, None)  # 锁定期已过，重置
+    return False
+
+
+def _record_login_failure(username):
+    rec = _login_failures.setdefault(username, {"count": 0, "locked_until": 0.0})
+    rec["count"] += 1
+    if rec["count"] >= LOGIN_MAX_FAILS:
+        rec["locked_until"] = time.time() + LOGIN_LOCK_SECONDS
+
+
+def _reset_login_failures(username):
+    _login_failures.pop(username, None)
+
 
 @app.route(f"{BASE_PREFIX}/login", methods=["POST"])
 def login():
@@ -87,11 +159,15 @@ def login():
     username = payload.get("username")
     password = payload.get("password")
 
+    if _is_login_locked(username):
+        return _err("尝试次数过多，请稍后再试", 429)
+
     # 先查管理员
     mgr = query_one(
         "SELECT * FROM sp_manager WHERE mg_name = ? AND mg_pwd = ?", (username, password)
     )
     if mgr:
+        _reset_login_failures(username)
         return _ok("登录成功", {
             "token": f"admin-token-{mgr['id']}",
             "id": mgr["id"],
@@ -105,6 +181,7 @@ def login():
         (username, password),
     )
     if user:
+        _reset_login_failures(username)
         return _ok("登录成功", {
             "token": f"token-{user['id']}",
             "id": user["id"],
@@ -112,6 +189,7 @@ def login():
             "role": "buyer",
         })
 
+    _record_login_failure(username)
     return _err("用户名或密码错误", 401)
 
 
@@ -120,8 +198,8 @@ def login():
 @app.route(f"{BASE_PREFIX}/goods", methods=["GET"])
 def goods_list():
     query = request.args.get("query", "")
-    pagenum = int(request.args.get("pagenum", 1))
-    pagesize = int(request.args.get("pagesize", 10))
+    pagenum = _parse_int(request.args.get("pagenum"), 1, min_val=1)
+    pagesize = _parse_int(request.args.get("pagesize"), 10, min_val=1, max_val=100)
     offset = (pagenum - 1) * pagesize
 
     total = query_one(
@@ -291,38 +369,52 @@ def order_create():
     if user_id is None:
         return _err("无效token", 401)
 
-    cart_items = query_all("SELECT * FROM sp_cart WHERE user_id = ?", (user_id,))
-    if not cart_items:
-        return _err("购物车为空", 400)
+    # 整段下单放在事务里：查库存用行锁（MySQL FOR UPDATE）防超卖，
+    # 任一步失败整体回滚，保证订单/明细/库存/购物车四者一致。
+    with transaction() as conn:
+        cart_items = query_all("SELECT * FROM sp_cart WHERE user_id = ?", (user_id,), conn=conn)
+        if not cart_items:
+            return _err("购物车为空", 400)
 
-    total = 0.0
-    order_items = []
-    for item in cart_items:
-        goods = query_one("SELECT * FROM sp_goods WHERE id = ? AND is_del = 0", (item["goods_id"],))
-        if not goods:
-            return _err("商品不存在", 404)
-        if goods["goods_number"] < item["goods_num"]:
-            return _err("库存不足", 400)
-        total += float(goods["goods_price"]) * int(item["goods_num"])
-        order_items.append((goods["id"], item["goods_num"], goods["goods_price"]))
+        total = 0.0
+        order_items = []
+        lock_sql = " FOR UPDATE" if _is_mysql() else ""
+        for item in cart_items:
+            goods = query_one(
+                f"SELECT * FROM sp_goods WHERE id = ? AND is_del = 0{lock_sql}",
+                (item["goods_id"],),
+                conn=conn,
+            )
+            if not goods:
+                return _err("商品不存在", 404)
+            if goods["goods_number"] < item["goods_num"]:
+                return _err("库存不足", 400)
+            total += float(goods["goods_price"]) * int(item["goods_num"])
+            order_items.append((goods["id"], item["goods_num"], goods["goods_price"]))
 
-    total = round(total, 2)
-    now = int(time.time())
-    order_number = f"ON{now}{user_id}"
+        total = round(total, 2)
+        now = int(time.time())
+        order_number = f"ON{now}{user_id}"
 
-    order_id = execute(
-        "INSERT INTO sp_order (order_number, user_id, total_price, pay_status, order_status, create_time) "
-        "VALUES (?, ?, ?, 0, 0, ?)",
-        (order_number, user_id, total, now),
-    )
-    for goods_id, num, price in order_items:
-        execute(
-            "INSERT INTO sp_order_item (order_id, goods_id, goods_num, goods_price) VALUES (?, ?, ?, ?)",
-            (order_id, goods_id, num, price),
+        order_id = execute(
+            "INSERT INTO sp_order (order_number, user_id, total_price, pay_status, order_status, create_time) "
+            "VALUES (?, ?, ?, 0, 0, ?)",
+            (order_number, user_id, total, now),
+            conn=conn,
         )
-        execute("UPDATE sp_goods SET goods_number = goods_number - ? WHERE id = ?", (num, goods_id))
+        for goods_id, num, price in order_items:
+            execute(
+                "INSERT INTO sp_order_item (order_id, goods_id, goods_num, goods_price) VALUES (?, ?, ?, ?)",
+                (order_id, goods_id, num, price),
+                conn=conn,
+            )
+            execute(
+                "UPDATE sp_goods SET goods_number = goods_number - ? WHERE id = ?",
+                (num, goods_id),
+                conn=conn,
+            )
 
-    execute("DELETE FROM sp_cart WHERE user_id = ?", (user_id,))
+        execute("DELETE FROM sp_cart WHERE user_id = ?", (user_id,), conn=conn)
 
     return _ok("创建订单成功", {"order_id": order_id, "order_number": order_number, "total_price": total})
 
@@ -332,8 +424,8 @@ def order_list():
     user_id = _buyer_id(request.headers.get("Authorization"))
     if user_id is None:
         return _err("无效token", 401)
-    pagenum = int(request.args.get("pagenum", 1))
-    pagesize = int(request.args.get("pagesize", 10))
+    pagenum = _parse_int(request.args.get("pagenum"), 1, min_val=1)
+    pagesize = _parse_int(request.args.get("pagesize"), 10, min_val=1, max_val=100)
     offset = (pagenum - 1) * pagesize
     total = query_one("SELECT COUNT(*) AS c FROM sp_order WHERE user_id = ?", (user_id,))["c"]
     orders = query_all(
@@ -397,11 +489,11 @@ def order_cancel(order_id):
 def users_list():
     if _admin_id(request.headers.get("Authorization")) is None:
         return _err("无效token", 401)
-    pagenum = int(request.args.get("pagenum", 1))
-    pagesize = int(request.args.get("pagesize", 10))
+    pagenum = _parse_int(request.args.get("pagenum"), 1, min_val=1)
+    pagesize = _parse_int(request.args.get("pagesize"), 10, min_val=1, max_val=100)
     offset = (pagenum - 1) * pagesize
     total = query_one("SELECT COUNT(*) AS c FROM sp_user", ())["c"]
-    users = query_all("SELECT * FROM sp_user ORDER BY id LIMIT ? OFFSET ?", (pagesize, offset))
+    users = query_all("SELECT id, username, state FROM sp_user ORDER BY id LIMIT ? OFFSET ?", (pagesize, offset))
     return _ok("获取用户列表成功", {"users": _rows(users), "total": total})
 
 
@@ -434,6 +526,10 @@ def users_update_state(user_id, state):
 
 # ==================== 上传 ====================
 
+ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "txt", "pdf"}
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
+
+
 @app.route(f"{BASE_PREFIX}/upload", methods=["POST"])
 def upload_file():
     if _auth_info(request.headers.get("Authorization")) is None:
@@ -441,13 +537,33 @@ def upload_file():
     if "file" not in request.files:
         return _err("文件未上传", 400)
     file_obj = request.files["file"]
+    if not file_obj.filename:
+        return _err("文件名为空", 400)
+
+    # 防路径穿越：去掉目录部分，只保留文件名（保留中文）
+    filename = os.path.basename(file_obj.filename.replace("\\", "/"))
+    if filename in (".", "..", ""):
+        return _err("文件名非法", 400)
+
+    # 扩展名白名单
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in ALLOWED_EXTENSIONS:
+        return _err("不支持的文件类型", 400)
+
+    # 大小限制
+    file_obj.stream.seek(0, os.SEEK_END)
+    size = file_obj.stream.tell()
+    file_obj.stream.seek(0)
+    if size > MAX_UPLOAD_SIZE:
+        return _err("文件过大", 400)
+
     upload_dir = os.path.join(os.getcwd(), "uploads")
     os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file_obj.filename)
+    file_path = os.path.join(upload_dir, filename)
     file_obj.save(file_path)
     return _ok("上传成功", {
-        "url": f"/uploads/{file_obj.filename}",
-        "filename": file_obj.filename,
+        "url": f"/uploads/{filename}",
+        "filename": filename,
         "upload_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     })
 

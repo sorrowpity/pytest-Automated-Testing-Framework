@@ -8,6 +8,7 @@
 """
 import os
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent / "data" / "mock_test.db"
@@ -50,38 +51,73 @@ def _sql(sql: str) -> str:
     return sql
 
 
-def execute(sql: str, params=()):
-    """执行 INSERT/UPDATE/DELETE，返回 lastrowid。"""
-    conn = get_conn()
+def execute(sql: str, params=(), conn=None):
+    """执行 INSERT/UPDATE/DELETE，返回 lastrowid。传入 conn 时复用连接、不提交不关闭。"""
+    own_conn = conn is None
+    if own_conn:
+        conn = get_conn()
     cur = conn.cursor()
     cur.execute(_sql(sql), params)
-    conn.commit()
     last_id = cur.lastrowid
     cur.close()
-    conn.close()
+    if own_conn:
+        conn.commit()
+        conn.close()
     return last_id
 
 
-def query_one(sql: str, params=()):
-    """返回单行（dict 风格）或 None。"""
-    conn = get_conn()
+def query_one(sql: str, params=(), conn=None):
+    """返回单行（dict 风格）或 None。传入 conn 时复用连接、不关闭。"""
+    own_conn = conn is None
+    if own_conn:
+        conn = get_conn()
     cur = conn.cursor()
     cur.execute(_sql(sql), params)
     row = cur.fetchone()
     cur.close()
-    conn.close()
+    if own_conn:
+        conn.close()
     return row
 
 
-def query_all(sql: str, params=()):
-    """返回多行（list[dict 风格]）。"""
-    conn = get_conn()
+def query_all(sql: str, params=(), conn=None):
+    """返回多行（list[dict 风格]）。传入 conn 时复用连接、不关闭。"""
+    own_conn = conn is None
+    if own_conn:
+        conn = get_conn()
     cur = conn.cursor()
     cur.execute(_sql(sql), params)
     rows = cur.fetchall()
     cur.close()
-    conn.close()
+    if own_conn:
+        conn.close()
     return rows
+
+
+@contextmanager
+def transaction():
+    """事务上下文管理器：MySQL 显式事务，SQLite 显式 BEGIN。
+
+    用法:
+        with transaction() as conn:
+            query_one("...", (x,), conn=conn)
+            execute("...", (y,), conn=conn)
+            # 任一步抛异常则整体回滚；正常走完则提交
+    """
+    conn = get_conn()
+    try:
+        if _is_mysql():
+            conn.begin()
+        else:
+            conn.isolation_level = None  # 显式事务，避开 sqlite3 legacy 自动提交
+            conn.execute("BEGIN")
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def init_db():
