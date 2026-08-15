@@ -40,8 +40,14 @@ def get_conn():
 
 
 def _sql(sql: str) -> str:
-    """SQL 统一用 ? 占位；MySQL 时替换成 %s。参数走 params，值里的 ? 不受影响。"""
-    return sql.replace("?", "%s") if _is_mysql() else sql
+    """SQL 统一用 ? 占位；MySQL 时替换成 %s，并转义字面 %（LIKE 通配符）。
+
+    顺序很关键：先转义字面 %，再把 ? 换成 %s，否则 %s 会被二次转义成 %%s。
+    """
+    if _is_mysql():
+        sql = sql.replace("%", "%%")  # LIKE 'user%' -> 'user%%'
+        sql = sql.replace("?", "%s")
+    return sql
 
 
 def execute(sql: str, params=()):
