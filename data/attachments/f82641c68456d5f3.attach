@@ -1,0 +1,1 @@
+1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//goods', 'headers': {'Authorization': 'admin-token-1'}, 'params': None, 'data': None, 'json': {'goods_name': '测试商品A', 'goods_price': 99.9, 'goods_number': 50, 'cat_id': 1}, 'files': None}

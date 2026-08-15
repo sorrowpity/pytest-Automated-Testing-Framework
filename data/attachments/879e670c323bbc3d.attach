@@ -1,0 +1,1 @@
+1.解析请求数据，请求数据为：{'method': 'put', 'url': 'http://127.0.0.1:8888/api/private/v1//orders/2/cancel', 'headers': {'Authorization': 'token-4'}, 'params': None, 'data': None, 'json': None, 'files': None}

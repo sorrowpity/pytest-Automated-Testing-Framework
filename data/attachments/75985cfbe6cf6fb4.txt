@@ -1,8 +1,0 @@
-INFO     root:test_runner.py:40 0.用例ID:1 模块:登录 场景:登录成功 标题:管理员登录成功
-INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//login', 'headers': None, 'params': None, 'data': None, 'json': {'username': 'admin', 'password': '123456'}, 'files': None}
-INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"id":1,"token":"mock-token-123","username":"admin"},"meg":"\u767b\u9646\u6210\u529f"}
-
-INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(登陆成功) == 预期结果(登陆成功)
-INFO     root:asserts.py:26 3.JDBC响应断言内容: 实际结果(admin) == 预期结果(admin)
-INFO     root:extractor.py:20 4.JSON提取, 根据({"TOKEN":"$..token"})提取数据, 此时全局变量为: ({'TOKEN': 'mock-token-123'})
-INFO     root:extractor.py:34 4.JDBC提取, 根据({"ADMIN_NAME": "select mg_name from sp_manager where mg_name = 'admin'"})提取数据, 此时全局变量为: ({'TOKEN': 'mock-token-123', 'ADMIN_NAME': 'admin'})

@@ -1,0 +1,6 @@
+INFO     root:test_runner.py:40 0.用例ID:8 模块:商品 场景:查询成功 标题:商品名称搜索
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'get', 'url': 'http://127.0.0.1:8888/api/private/v1//goods', 'headers': None, 'params': {'query': '0002', 'pagenum': 1, 'pagesize': 10}, 'data': None, 'json': None, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"goods":[{"add_time":1786786372,"cat_id":1,"delete_time":null,"goods_big_logo":"","goods_introduce":null,"goods_name":"\u624b\u673a\u6570\u7801-0002","goods_number":100,"goods_price":"10.20","goods_small_logo":"","goods_state":1,"goods_weight":100,"hot_mumber":0,"id":2,"is_del":0,"is_promote":0,"upd_time":1786786912}],"total":1},"meg":"\u83b7\u53d6\u5546\u54c1\u5217\u8868\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(获取商品列表成功) == 预期结果(获取商品列表成功)
+INFO     root:asserts.py:26 3.JDBC响应断言内容: 实际结果(1) == 预期结果(1)

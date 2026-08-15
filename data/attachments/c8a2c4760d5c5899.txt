@@ -1,0 +1,6 @@
+INFO     root:test_runner.py:40 0.用例ID:30 模块:订单 场景:数据一致性 标题:取消后库存回滚校验
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'get', 'url': 'http://127.0.0.1:8888/api/private/v1//goods/3', 'headers': None, 'params': None, 'data': None, 'json': None, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"goods":{"add_time":1786786372,"cat_id":1,"delete_time":null,"goods_big_logo":"","goods_introduce":null,"goods_name":"\u624b\u673a\u6570\u7801-0003","goods_number":100,"goods_price":"10.30","goods_small_logo":"","goods_state":1,"goods_weight":100,"hot_mumber":0,"id":3,"is_del":0,"is_promote":0,"upd_time":null}},"meg":"\u83b7\u53d6\u5546\u54c1\u8be6\u60c5\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(获取商品详情成功) == 预期结果(获取商品详情成功)
+INFO     root:asserts.py:26 3.JDBC响应断言内容: 实际结果(100) == 预期结果(100)

@@ -1,0 +1,6 @@
+INFO     root:test_runner.py:40 0.用例ID:34 模块:用户管理 场景:查询成功 标题:管理员查询用户列表
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'get', 'url': 'http://127.0.0.1:8888/api/private/v1//users', 'headers': {'Authorization': 'admin-token-1'}, 'params': {'pagenum': 1, 'pagesize': 10}, 'data': None, 'json': None, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"total":101,"users":[{"id":1,"password":"123456","state":1,"username":"admin"},{"id":3,"password":"123456","state":1,"username":"user001"},{"id":4,"password":"123456","state":1,"username":"user002"},{"id":5,"password":"123456","state":1,"username":"user003"},{"id":6,"password":"123456","state":1,"username":"user004"},{"id":7,"password":"123456","state":1,"username":"user005"},{"id":8,"password":"123456","state":1,"username":"user006"},{"id":9,"password":"123456","state":1,"username":"user007"},{"id":10,"password":"123456","state":1,"username":"user008"},{"id":11,"password":"123456","state":1,"username":"user009"}]},"meg":"\u83b7\u53d6\u7528\u6237\u5217\u8868\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(获取用户列表成功) == 预期结果(获取用户列表成功)
+INFO     root:asserts.py:26 3.JDBC响应断言内容: 实际结果(101) == 预期结果(101)

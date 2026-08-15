@@ -1,5 +1,0 @@
-INFO     root:test_runner.py:40 0.用例ID:10 模块:用户管理 场景:添加失败 标题:缺少密码创建用户失败
-INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//users', 'headers': {'Authorization': 'mock-token-123'}, 'params': None, 'data': None, 'json': {'username': 'no_pass'}, 'files': None}
-INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{},"meg":"\u53c2\u6570\u9519\u8bef"}
-
-INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(参数错误) == 预期结果(参数错误)

@@ -1,0 +1,5 @@
+INFO     root:test_runner.py:40 0.用例ID:6 模块:认证 场景:安全测试 标题:SQL注入登录被拦截
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//login', 'headers': None, 'params': None, 'data': None, 'json': {'username': "admin' OR '1'='1", 'password': 'x'}, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{},"meg":"\u7528\u6237\u540d\u6216\u5bc6\u7801\u9519\u8bef"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(用户名或密码错误) == 预期结果(用户名或密码错误)

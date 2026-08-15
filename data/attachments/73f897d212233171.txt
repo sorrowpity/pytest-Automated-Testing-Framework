@@ -1,0 +1,5 @@
+INFO     root:test_runner.py:40 0.用例ID:22 模块:购物车 场景:鉴权测试 标题:未登录加购失败
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'post', 'url': 'http://127.0.0.1:8888/api/private/v1//cart', 'headers': None, 'params': None, 'data': None, 'json': {'goods_id': 2, 'goods_num': 1}, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{},"meg":"\u65e0\u6548token"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(无效token) == 预期结果(无效token)

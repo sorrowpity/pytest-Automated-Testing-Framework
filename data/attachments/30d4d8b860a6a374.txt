@@ -1,0 +1,5 @@
+INFO     root:test_runner.py:40 0.用例ID:21 模块:购物车 场景:删除成功 标题:删除购物车项
+INFO     root:analyse_case.py:28 1.解析请求数据，请求数据为：{'method': 'delete', 'url': 'http://127.0.0.1:8888/api/private/v1//cart/4', 'headers': {'Authorization': 'token-3'}, 'params': None, 'data': None, 'json': None, 'files': None}
+INFO     root:send_request.py:14 2.发送HTTP请求, 响应文本为: {"data":{"cart_id":4},"meg":"\u5220\u9664\u8d2d\u7269\u8f66\u6210\u529f"}
+
+INFO     root:asserts.py:12 3.HTTP响应断言内容: 实际结果(删除购物车成功) == 预期结果(删除购物车成功)
