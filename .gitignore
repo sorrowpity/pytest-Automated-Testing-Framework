@@ -11,6 +11,10 @@ report/
 allure-report/
 allure-results/
 
+# 数据库产物与上传文件（运行时生成，不入库）
+data/mock_test.db
+uploads/
+
 # python虚拟环境
 .venv/
 venv/
